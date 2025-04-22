@@ -1,18 +1,28 @@
 <?php
-    // Get the connection string from the environment
     $connStr = getenv('MYSQLCONNSTR_AZURE_MYSQL_CONNECTIONSTRING');
 
-
     if (!$connStr) {
-        die("Environment variable AZURE_MYSQL_CONNECTIONSTRING not set." . $connStr);
+        die("Environment variable AZURE_MYSQL_CONNECTIONSTRING not set.");
     }
 
+    // Die Zeichenkette parsen
+    preg_match("/Database=(.+?);/", $connStr, $db);
+    preg_match("/Data Source=(.+?);/", $connStr, $host);
+    preg_match("/User Id=(.+?);/", $connStr, $user);
+    preg_match("/Password=(.+)/", $connStr, $pass);
+
+    if (!$db || !$host || !$user || !$pass) {
+        die("Fehler beim Parsen der Verbindungszeichenfolge.");
+    }
+
+    // DSN korrekt aufbauen
+    $dsn = "mysql:host={$host[1]};dbname={$db[1]};charset=utf8";
+
+    // Verbindung aufbauen
     try {
-        // Create PDO instance
-        $pdo = new PDO($connStr);
+        $pdo = new PDO($dsn, $user[1], $pass[1]);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        // Run the query
         $sql = "SELECT * FROM oillevels ORDER BY timestamp DESC";
         $stmt = $pdo->query($sql);
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
