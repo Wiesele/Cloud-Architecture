@@ -7,7 +7,7 @@
 
     // Die Zeichenkette parsen
     preg_match("/Database=(.+?);/", $connStr, $db);
-    preg_match("/Data Source=(.+?);/", $connStr, $host);
+    preg_match("/Server=(.+?);/", $connStr, $host);
     preg_match("/User Id=(.+?);/", $connStr, $user);
     preg_match("/Password=(.+)/", $connStr, $pass);
 
