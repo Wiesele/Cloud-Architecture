@@ -84,6 +84,8 @@
 
     <h1>Ölstand Übersicht</h1>
 
+    <canvas id="oilChart" style="max-width: 800px; margin: 0 auto 40px; display: block;"></canvas>
+
     <table>
         <thead>
             <tr>
@@ -110,6 +112,66 @@
     <footer>
         &copy; <?= date("Y") ?> Ölstand-Tracker
     </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // PHP-Daten als JS-Variablen
+        const oilData = <?php echo json_encode($data); ?>;
+
+        const labels = oilData.map(row => row.timestamp);
+        const levels = oilData.map(row => parseFloat(row.level));
+
+        const ctx = document.getElementById('oilChart').getContext('2d');
+        const oilChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels.reverse(), // Älteste zuerst
+                datasets: [{
+                    label: 'Ölstand',
+                    data: levels.reverse(),
+                    fill: true,
+                    borderColor: 'rgba(0, 120, 215, 1)',
+                    backgroundColor: 'rgba(0, 120, 215, 0.2)',
+                    tension: 0.3,
+                    pointRadius: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Ölstand über Zeit',
+                        font: {
+                            size: 18
+                        }
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Zeitstempel'
+                        },
+                        ticks: {
+                            maxTicksLimit: 10,
+                            callback: val => labels[val]?.slice(0, 16) || ''
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Ölstand'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
