@@ -3,7 +3,7 @@
     $connStr = getenv('AZURE_MYSQL_CONNECTIONSTRING');
 
     if (!$connStr) {
-        die("Environment variable AZURE_MYSQL_CONNECTIONSTRING not set.");
+        die("Environment variable AZURE_MYSQL_CONNECTIONSTRING not set." . $connStr);
     }
 
     try {
