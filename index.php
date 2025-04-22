@@ -16,7 +16,7 @@
     }
 
     // DSN korrekt aufbauen
-    $dsn = "mysql:host={$host[1]};dbname={$db[1]};charset=utf8";
+    $dsn = "mysql:host={$host[1]};dbname={$db[1]};charset=utf8,sslmode=require";
 
     // Verbindung aufbauen
     try {
