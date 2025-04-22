@@ -2,7 +2,7 @@
     // Get the connection string from the environment
     $connStr = getenv('AZURE_MYSQL_CONNECTIONSTRING');
 
-    // var_dump(getenv())
+    var_dump(getenv());
 
     if (!$connStr) {
         die("Environment variable AZURE_MYSQL_CONNECTIONSTRING not set." . $connStr);
