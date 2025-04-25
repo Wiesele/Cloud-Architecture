@@ -5,7 +5,7 @@
         die("Environment variable AZURE_MYSQL_CONNECTIONSTRING not set.");
     }
 
-    // Verbindungsdaten extrahieren
+    // Die Zeichenkette parsen
     preg_match("/Database=(.+?);/", $connStr, $db);
     preg_match("/Server=(.+?);/", $connStr, $host);
     preg_match("/User Id=(.+?);/", $connStr, $user);
@@ -15,32 +15,19 @@
         die("Fehler beim Parsen der Verbindungszeichenfolge.");
     }
 
-    // DSN für PDO
+    // DSN korrekt aufbauen
     $dsn = "mysql:host={$host[1]};dbname={$db[1]};charset=utf8mb4;sslmode=require";
 
+    // Verbindung aufbauen
     try {
         $pdo = new PDO($dsn, $user[1], $pass[1]);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-        // Falls Formular abgeschickt wurde
-        if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['level'])) {
-            $newLevel = trim($_POST['level']);
-
-            if (is_numeric($newLevel)) {
-                $stmt = $pdo->prepare("INSERT INTO oillevels (level, timestamp) VALUES (?, NOW())");
-                $stmt->execute([$newLevel]);
-                header("Location: " . $_SERVER['PHP_SELF']); // Seite neu laden
-                exit;
-            } else {
-                $error = "Bitte eine gültige Zahl eingeben.";
-            }
-        }
-
-        // Daten abrufen
-        $stmt = $pdo->query("SELECT * FROM oillevels ORDER BY timestamp DESC");
+        $sql = "SELECT * FROM oillevels ORDER BY timestamp DESC";
+        $stmt = $pdo->query($sql);
         $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (PDOException $e) {
-        die("Datenbankfehler: " . $e->getMessage());
+        die("Database error: " . $e->getMessage());
     }
 ?>
 
@@ -60,47 +47,6 @@
         h1 {
             text-align: center;
             color: #333;
-        }
-
-        form {
-            max-width: 500px;
-            margin: 20px auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        input[type="text"] {
-            padding: 10px;
-            flex: 1;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        input[type="submit"] {
-            padding: 10px 20px;
-            background-color: #0078D7;
-            border: none;
-            color: white;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        input[type="submit"]:hover {
-            background-color: #005fa3;
-        }
-
-        .error {
-            color: red;
-            text-align: center;
-            margin-top: 10px;
         }
 
         table {
@@ -138,15 +84,6 @@
 
     <h1>Ölstand Übersicht</h1>
 
-    <form method="POST">
-        <input type="text" name="level" placeholder="Aktuellen Ölstand eingeben" required>
-        <input type="submit" value="Eintragen">
-    </form>
-
-    <?php if (!empty($error)) : ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-
     <canvas id="oilChart" style="max-width: 800px; margin: 0 auto 40px; display: block;"></canvas>
 
     <table>
@@ -176,17 +113,20 @@
         &copy; <?= date("Y") ?> Ölstand-Tracker
     </footer>
 
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // PHP-Daten als JS-Variablen
         const oilData = <?php echo json_encode($data); ?>;
+
         const labels = oilData.map(row => row.timestamp);
         const levels = oilData.map(row => parseFloat(row.level));
 
         const ctx = document.getElementById('oilChart').getContext('2d');
-        new Chart(ctx, {
+        const oilChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: labels.reverse(),
+                labels: labels.reverse(), // Älteste zuerst
                 datasets: [{
                     label: 'Ölstand',
                     data: levels.reverse(),
